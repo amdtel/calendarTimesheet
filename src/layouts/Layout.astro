@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+const { title, component } = Astro.props;
+const path = Astro.url.pathname;
+const nav = [
+  ['/', 'Clock'],
+  ['/calendar/', 'Calendar'],
+  ['/jobs/', 'Jobs'],
+  ['/timesheet/', 'Hours'],
+  ['/backup/', 'Backup'],
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <title>{title} · Timesheet</title>
+  </head>
+  <body>
+    <header><h1>{title}</h1></header>
+    <main><slot /></main>
+    <nav>
+      {nav.map(([href, label]) => <a href={href} aria-current={path === href ? 'page' : undefined}>{label}</a>)}
+    </nav>
+    <script>
+      import '../components/ct-clock.js';
+      import '../components/ct-calendar.js';
+      import '../components/ct-jobs.js';
+      import '../components/ct-timesheet.js';
+      import '../components/ct-backup.js';
+
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+      navigator.storage?.persist?.();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,63 @@
+:root {
+  --bg: #0f172a; --card: #1e293b; --line: #334155; --text: #f1f5f9; --muted: #94a3b8;
+  --accent: #38bdf8; --go: #22c55e; --stop: #ef4444;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.4 system-ui, sans-serif;
+  padding: env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom));
+}
+header { padding: 16px; } h1 { margin: 0; font-size: 1.4rem; }
+h2 { margin: 0 0 8px; font-size: 1.05rem; display: flex; justify-content: space-between; }
+main { max-width: 640px; margin: 0 auto; padding: 0 12px; display: grid; gap: 12px; }
+a { color: var(--accent); }
+.muted { color: var(--muted); margin: 4px 0; }
+
+nav {
+  position: fixed; inset: auto 0 0 0; display: flex; background: var(--card);
+  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
+}
+nav a { flex: 1; text-align: center; padding: 16px 0; color: var(--muted); text-decoration: none; font-size: .85rem; }
+nav a[aria-current] { color: var(--accent); font-weight: 600; }
+
+.card { background: var(--card); border-radius: 14px; padding: 14px; display: grid; gap: 8px; border: 0; color: inherit; text-align: left; font: inherit; width: 100%; }
+.row { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+
+.btn { display: block; text-align: center; text-decoration: none; border: 0; border-radius: 12px; padding: 14px; font: inherit; font-weight: 600; color: #04121f; background: var(--accent); min-height: 48px; cursor: pointer; }
+.btn.go { background: var(--go); } .btn.stop { background: var(--stop); color: #fff; }
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn:disabled { opacity: .4; }
+.actions { display: grid; gap: 8px; }
+
+input, select, textarea { width: 100%; padding: 12px; margin-top: 4px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+label { display: block; color: var(--muted); font-size: .85rem; }
+form.card { gap: 12px; }
+
+.clock { text-align: center; padding: 24px 14px; }
+.clock.on { outline: 2px solid var(--go); }
+.big { font-size: 3rem; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.chips { display: flex; gap: 8px; overflow-x: auto; }
+.chip { border: 1px solid var(--line); background: none; color: var(--muted); padding: 8px 14px; border-radius: 99px; font: inherit; text-transform: capitalize; }
+.chip.sel { background: var(--accent); color: #04121f; border-color: var(--accent); }
+
+.job { display: grid; gap: 4px; cursor: pointer; }
+.badge { justify-self: start; font-size: .75rem; padding: 2px 10px; border-radius: 99px; background: var(--line); text-transform: capitalize; }
+.badge.estimate, .dot.estimate { background: #a78bfa; }
+.badge.proposal, .dot.proposal { background: #fbbf24; color: #000; }
+.badge.booked, .dot.booked { background: var(--accent); color: #000; }
+.badge.done, .dot.done { background: var(--go); color: #000; }
+
+.fab { position: fixed; right: 16px; bottom: calc(80px + env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--accent); font-size: 2rem; color: #04121f; box-shadow: 0 4px 12px #0008; }
+
+.cal-head { display: flex; justify-content: space-between; align-items: center; }
+.cal-head h2 { margin: 0; } .cal-head .btn { width: 48px; padding: 0; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.dow { text-align: center; color: var(--muted); font-size: .8rem; }
+.day { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit; font: inherit; display: grid; place-items: center; align-content: center; padding: 0; }
+.day.today { border-color: var(--accent); } .day.sel { background: var(--line); }
+.dots { display: flex; gap: 2px; height: 6px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; display: block; }
+.x { background: none; border: 0; color: var(--stop); font-size: 1.4rem; padding: 0 8px; }
