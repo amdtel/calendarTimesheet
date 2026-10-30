@@ -9,9 +9,10 @@ body {
   font: 16px/1.4 system-ui, sans-serif;
   padding: 0 0 calc(24px + env(safe-area-inset-bottom));
 }
-header { padding: 16px; } h1 { margin: 0; font-size: 1.4rem; }
+.jobs-title-row { display: flex; justify-content: center; align-items: center; padding: 4px 0; }
+.add-job { width: 50%; min-height: 44px; padding: 10px 14px; }
 h2 { margin: 0 0 8px; font-size: 1.05rem; display: flex; justify-content: space-between; }
-main { max-width: 640px; margin: 0 auto; padding: 0 12px; display: grid; gap: 12px; }
+main { max-width: 640px; margin: 0 auto; padding: 8px 12px 0; display: grid; gap: 12px; }
 a { color: var(--accent); }
 .muted { color: var(--muted); margin: 4px 0; }
 
@@ -49,8 +50,6 @@ form.card { gap: 12px; }
 .badge.proposal, .dot.proposal { background: #fbbf24; color: #000; }
 .badge.booked, .dot.booked { background: var(--accent); color: #000; }
 .badge.done, .dot.done { background: var(--go); color: #000; }
-
-.fab { position: fixed; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--accent); font-size: 2rem; color: #04121f; box-shadow: 0 4px 12px #0008; }
 
 .cal-head { display: flex; justify-content: space-between; align-items: center; }
 .cal-head h2 { margin: 0; } .cal-head .btn { width: 48px; padding: 0; }

@@ -55,24 +55,29 @@ class CtJobs extends CtElement {
   }
 
   render() {
-    if (this.editing) return this._form();
     const jobs = getState().jobs.filter((j) => this.filter === 'all' || j.status === this.filter);
     return html`
-      <div class="chips">
-        ${['all', ...STATUSES].map(
-          (s) => html`<button class="chip ${this.filter === s ? 'sel' : ''}" @click=${() => (this.filter = s)}>${s}</button>`
-        )}
+      <div class="jobs-title-row">
+        ${!this.editing ? html`<button class="btn go add-job" @click=${() => (this.editing = this._new())}>+ Add job</button>` : nothing}
       </div>
-      ${jobs.length
-        ? jobs.map(
-            (j) => html`<button class="card job" @click=${() => (this.editing = j)}>
-              <strong>${j.name}</strong>
-              <span class="badge ${j.status}">${j.status}</span>
-              <span class="muted">${[j.client, j.date, j.amount && `$${j.amount}`].filter(Boolean).join(' · ')}</span>
-            </button>`
-          )
-        : html`<p class="muted">No jobs here yet.</p>`}
-      <button class="fab" aria-label="Add job" @click=${() => (this.editing = this._new())}>+</button>
+      ${this.editing
+        ? this._form()
+        : html`
+            <div class="chips">
+              ${['all', ...STATUSES].map(
+                (s) => html`<button class="chip ${this.filter === s ? 'sel' : ''}" @click=${() => (this.filter = s)}>${s}</button>`
+              )}
+            </div>
+            ${jobs.length
+              ? jobs.map(
+                  (j) => html`<button class="card job" @click=${() => (this.editing = j)}>
+                    <strong>${j.name}</strong>
+                    <span class="badge ${j.status}">${j.status}</span>
+                    <span class="muted">${[j.client, j.date, j.amount && `$${j.amount}`].filter(Boolean).join(' · ')}</span>
+                  </button>`
+                )
+              : html`<p class="muted">No jobs here yet.</p>`}
+          `}
     `;
   }
 }
