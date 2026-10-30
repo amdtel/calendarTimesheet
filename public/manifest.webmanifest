@@ -1,6 +1,7 @@
 {
   "name": "Calendar Timesheet",
   "short_name": "Timesheet",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
