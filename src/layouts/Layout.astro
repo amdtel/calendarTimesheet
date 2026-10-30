@@ -22,11 +22,11 @@ const nav = [
     <title>{title} · Timesheet</title>
   </head>
   <body>
-    <header><h1>{title}</h1></header>
-    <main><slot /></main>
     <nav>
       {nav.map(([href, label]) => <a href={href} aria-current={path === href ? 'page' : undefined}>{label}</a>)}
     </nav>
+    <header><h1>{title}</h1></header>
+    <main><slot /></main>
     <script>
       import '../components/ct-clock.js';
       import '../components/ct-calendar.js';
