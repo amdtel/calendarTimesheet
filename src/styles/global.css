@@ -31,6 +31,7 @@ nav a[aria-current] { color: var(--accent); font-weight: 600; }
 .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
 .btn:disabled { opacity: .4; }
 .actions { display: grid; gap: 8px; }
+.phase-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 input, select, textarea { width: 100%; padding: 12px; margin-top: 4px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
 label { display: block; color: var(--muted); font-size: .85rem; }
@@ -60,3 +61,29 @@ form.card { gap: 12px; }
 .dots { display: flex; gap: 2px; height: 6px; }
 .dot { width: 6px; height: 6px; border-radius: 50%; display: block; }
 .x { background: none; border: 0; color: var(--stop); font-size: 1.4rem; padding: 0 8px; }
+
+.invoice-list-item { width: 100%; color: inherit; background: transparent; text-align: left; font: inherit; border: 0; }
+.invoice-list-item > span:last-child { text-align: right; white-space: nowrap; }
+.invoice-paper { display: grid; gap: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+.invoice-heading { display: flex; justify-content: space-between; gap: 16px; }
+.invoice-heading h2 { font-size: 1.5rem; }
+.invoice-heading > div:last-child { text-align: right; }
+.invoice-party p { margin: 4px 0; }
+.invoice-table { display: grid; gap: 0; }
+.invoice-line { display: grid; grid-template-columns: minmax(0, 2fr) .55fr 1fr 1fr; gap: 8px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.invoice-line > :first-child { overflow-wrap: anywhere; }
+.invoice-line > :not(:first-child) { text-align: right; }
+.invoice-labels { color: var(--muted); font-size: .8rem; }
+.invoice-total { display: flex; justify-content: flex-end; gap: 24px; font-size: 1.15rem; }
+.invoice-controls { display: grid; gap: 8px; }
+
+@media print {
+  @page { margin: 16mm; }
+  body { padding: 0; background: #fff; color: #111; font: 12pt/1.4 sans-serif; }
+  nav, .no-print { display: none !important; }
+  main { display: block; max-width: none; margin: 0; padding: 0; }
+  ct-invoices { display: block; }
+  .invoice-paper { display: grid; gap: 20px; padding: 0; border: 0; border-radius: 0; background: #fff; color: #111; }
+  .invoice-paper .muted, .invoice-labels { color: #555; }
+  .invoice-line { border-color: #ccc; }
+}

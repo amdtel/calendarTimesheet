@@ -1,6 +1,6 @@
 import { html } from 'lit';
 import { CtElement } from '../lib/base.js';
-import { getState, jobById, deleteEntry, fmtHours, fmtTime, fmtDur, dateKey } from '../lib/store.js';
+import { getState, jobById, deleteEntry, entryDuration, entrySegments, segmentDuration, fmtHours, fmtTime, fmtDur, dateKey } from '../lib/store.js';
 
 class CtTimesheet extends CtElement {
   static properties = { range: { state: true } };
@@ -20,9 +20,9 @@ class CtTimesheet extends CtElement {
   render() {
     const since = this._since();
     const entries = getState().entries.filter((e) => e.start >= since).sort((a, b) => b.start - a.start);
-    const total = entries.reduce((a, e) => a + (e.end - e.start), 0);
+    const total = entries.reduce((sum, entry) => sum + entryDuration(entry), 0);
     const byJob = {};
-    for (const e of entries) byJob[e.jobId] = (byJob[e.jobId] ?? 0) + (e.end - e.start);
+    for (const entry of entries) byJob[entry.jobId] = (byJob[entry.jobId] ?? 0) + entryDuration(entry);
     const days = [...new Set(entries.map((e) => dateKey(new Date(e.start))))];
 
     return html`
@@ -44,8 +44,10 @@ class CtTimesheet extends CtElement {
             .filter((e) => dateKey(new Date(e.start)) === day)
             .map(
               (e) => html`<div class="row">
-                <span>${jobById(e.jobId)?.name ?? 'Deleted job'}<br /><small class="muted">${fmtTime(e.start)}–${fmtTime(e.end)}</small></span>
-                <span>${fmtDur(e.end - e.start)}
+                <span>${jobById(e.jobId)?.name ?? 'Deleted job'}<br /><small class="muted">${fmtTime(e.start)}–${fmtTime(e.end)}</small>
+                  ${e.segments?.length ? html`<br /><small class="muted">Work ${fmtDur(segmentDuration(entrySegments(e), 'work'))} · Travel ${fmtDur(segmentDuration(entrySegments(e), 'travel'))}</small>` : ''}
+                </span>
+                <span>${fmtDur(entryDuration(e))}
                   <button class="x" aria-label="Delete entry" @click=${() => confirm('Delete entry?') && deleteEntry(e.id)}>×</button>
                 </span>
               </div>`

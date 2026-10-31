@@ -1,6 +1,6 @@
 import { html } from 'lit';
 import { CtElement } from '../lib/base.js';
-import { getState, replaceAll, jobById } from '../lib/store.js';
+import { getState, replaceAll, jobById, entryDuration, entrySegments, segmentDuration } from '../lib/store.js';
 
 const download = (name, text, type) => {
   const a = document.createElement('a');
@@ -23,10 +23,19 @@ class CtBackup extends CtElement {
 
   _csv() {
     const q = (v) => `"${String(v ?? '').replaceAll('"', '""')}"`;
-    const rows = [['job', 'client', 'start', 'end', 'hours'].join(',')];
+    const rows = [['job', 'client', 'start', 'end', 'work_hours', 'travel_hours', 'total_hours'].join(',')];
     for (const e of getState().entries) {
       const j = jobById(e.jobId);
-      rows.push([q(j?.name), q(j?.client), new Date(e.start).toISOString(), new Date(e.end).toISOString(), ((e.end - e.start) / 3600000).toFixed(2)].join(','));
+      const segments = entrySegments(e);
+      rows.push([
+        q(j?.name),
+        q(j?.client),
+        new Date(e.start).toISOString(),
+        new Date(e.end).toISOString(),
+        (segmentDuration(segments, 'work') / 3600000).toFixed(2),
+        (segmentDuration(segments, 'travel') / 3600000).toFixed(2),
+        (entryDuration(e) / 3600000).toFixed(2),
+      ].join(','));
     }
     download('timesheet.csv', rows.join('\n'), 'text/csv');
   }

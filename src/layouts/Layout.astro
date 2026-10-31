@@ -7,6 +7,7 @@ const nav = [
   ['/calendar/', 'Calendar'],
   ['/jobs/', 'Jobs'],
   ['/timesheet/', 'Hours'],
+  ['/invoices/', 'Invoices'],
   ['/backup/', 'Backup'],
 ];
 ---
@@ -31,6 +32,7 @@ const nav = [
       import '../components/ct-calendar.js';
       import '../components/ct-jobs.js';
       import '../components/ct-timesheet.js';
+      import '../components/ct-invoices.js';
       import '../components/ct-backup.js';
 
       if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');

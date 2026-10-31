@@ -12,7 +12,7 @@ class CtJobs extends CtElement {
 
   _new() {
     const p = new URLSearchParams(location.search);
-    return { name: '', client: '', status: 'estimate', date: p.get('date') ?? '', amount: '', notes: '' };
+    return { name: '', client: '', status: 'estimate', billingType: 'fixed', hourlyRate: '', date: p.get('date') ?? '', amount: '', notes: '' };
   }
 
   connectedCallback() {
@@ -42,6 +42,15 @@ class CtJobs extends CtElement {
         </label>
         <label>Date <input type="date" name="date" .value=${j.date} /></label>
         <label>Quote / amount <input type="number" name="amount" step="0.01" inputmode="decimal" .value=${j.amount} /></label>
+        <label>Billing type
+          <select name="billingType" @change=${(e) => (this.editing = { ...this.editing, billingType: e.target.value })}>
+            <option value="fixed" ?selected=${(j.billingType ?? (j.amount ? 'fixed' : 'hourly')) === 'fixed'}>Fixed quote</option>
+            <option value="hourly" ?selected=${(j.billingType ?? (j.amount ? 'fixed' : 'hourly')) === 'hourly'}>Hourly</option>
+          </select>
+        </label>
+        ${(j.billingType ?? (j.amount ? 'fixed' : 'hourly')) === 'hourly'
+          ? html`<label>Hourly rate (£/h) <input type="number" name="hourlyRate" min="0" step="0.01" inputmode="decimal" .value=${j.hourlyRate ?? ''} /></label>`
+          : nothing}
         <label>Notes <textarea name="notes" rows="3" .value=${j.notes}></textarea></label>
         <div class="actions">
           <button class="btn go">Save</button>
