@@ -1,8 +1,16 @@
 import { html, nothing } from 'lit';
 import { CtElement } from '../lib/base.js';
-import { getState, jobById, saveInvoice, deleteInvoice, nextInvoiceNumber, entryDuration, entrySegments, segmentDuration, dateKey } from '../lib/store.js';
+import { getState, jobById, saveInvoice, saveBusiness, deleteInvoice, nextInvoiceNumber, entryDuration, entrySegments, segmentDuration, dateKey } from '../lib/store.js';
 
 const money = (value) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(value || 0);
+const roundUpMinutes = (ms) => Math.ceil(ms / 600000 - 1e-9) * 10;
+const fmtHrsMins = (minutes) => `${Math.floor(minutes / 60)}h ${String(Math.round(minutes % 60)).padStart(2, '0')}m`;
+const addDays = (date, days) => {
+  const d = new Date(`${date}T00:00:00`);
+  d.setDate(d.getDate() + Number(days));
+  return dateKey(d);
+};
+const textLines = (text) => String(text ?? '').split('\n').filter(Boolean);
 
 class CtInvoices extends CtElement {
   static properties = { jobId: { state: true }, billingType: { state: true }, invoiceId: { state: true } };
@@ -40,13 +48,14 @@ class CtInvoices extends CtElement {
       if (!rate || !entries.length) return;
       entryIds = entries.map((entry) => entry.id);
       lines = entries.map((entry) => {
-        const hours = Math.round((entryDuration(entry) / 3600000) * 100) / 100;
-        const travelHours = Math.round((segmentDuration(entrySegments(entry), 'travel') / 3600000) * 100) / 100;
+        const minutes = roundUpMinutes(entryDuration(entry));
+        const travelMinutes = Math.round(segmentDuration(entrySegments(entry), 'travel') / 60000);
         return {
-          description: `${job.name} · ${dateKey(new Date(entry.start))}${travelHours ? ` · includes ${travelHours}h travel` : ''}`,
-          quantity: hours,
+          description: `${job.name} · ${dateKey(new Date(entry.start))}${travelMinutes ? ` · includes ${fmtHrsMins(travelMinutes)} travel` : ''}`,
+          minutes,
+          quantity: minutes / 60,
           rate,
-          amount: Math.round(hours * rate * 100) / 100,
+          amount: Math.round((minutes / 60) * rate * 100) / 100,
         };
       });
     } else {
@@ -61,6 +70,13 @@ class CtInvoices extends CtElement {
       jobId: job.id,
       jobName: job.name,
       client: job.client || 'Client',
+      clientDetails: {
+        contact: job.clientContact ?? '',
+        email: job.clientEmail ?? '',
+        address: job.clientAddress ?? '',
+        ref: job.clientRef ?? '',
+      },
+      business: { ...getState().business },
       billingType: this.billingType,
       date: dateKey(new Date()),
       status: 'draft',
@@ -69,6 +85,11 @@ class CtInvoices extends CtElement {
       total: Math.round(lines.reduce((sum, line) => sum + line.amount, 0) * 100) / 100,
     });
     this.invoiceId = invoice.id;
+  }
+
+  _saveBusiness(e) {
+    e.preventDefault();
+    saveBusiness(Object.fromEntries(new FormData(e.target)));
   }
 
   _setStatus(invoice, e) {
@@ -82,17 +103,34 @@ class CtInvoices extends CtElement {
   }
 
   render() {
-    const { jobs, invoices = [] } = getState();
+    const { jobs, invoices = [], business = {} } = getState();
     const selected = invoices.find((invoice) => invoice.id === this.invoiceId);
     const job = jobById(this.jobId);
     const jobDraft = job ? invoices.find((invoice) => invoice.jobId === job.id && invoice.status === 'draft') : null;
     const unbilled = job ? this._unbilledEntries(job.id, jobDraft?.id) : [];
     const fixedAlreadyInvoiced = job && invoices.some((invoice) => invoice.jobId === job.id && invoice.billingType === 'fixed' && invoice.status !== 'draft');
     const rate = Number(job?.hourlyRate || 0);
-    const hours = unbilled.reduce((sum, entry) => sum + entryDuration(entry), 0) / 3600000;
+    const hours = unbilled.reduce((sum, entry) => sum + roundUpMinutes(entryDuration(entry)), 0);
     const canCreate = this.billingType === 'hourly' ? rate > 0 && unbilled.length > 0 : Number(job?.amount) > 0 && !fixedAlreadyInvoiced;
 
     return html`
+      <section class="card no-print">
+        <details>
+          <summary><strong>Your business details</strong></summary>
+          <form @submit=${this._saveBusiness}>
+            <label>Business name <input name="name" .value=${business.name ?? ''} /></label>
+            <label>Address <textarea name="address" rows="3" .value=${business.address ?? ''}></textarea></label>
+            <label>Email <input type="email" name="email" .value=${business.email ?? ''} /></label>
+            <label>Phone <input name="phone" .value=${business.phone ?? ''} /></label>
+            <label>VAT / company number <input name="taxId" .value=${business.taxId ?? ''} /></label>
+            <label>Payment terms (days) <input type="number" name="termsDays" min="0" inputmode="numeric" .value=${business.termsDays ?? '14'} /></label>
+            <label>Payment details <textarea name="paymentDetails" rows="3" placeholder="Bank name, sort code, account number" .value=${business.paymentDetails ?? ''}></textarea></label>
+            <label>Invoice footer note <textarea name="footer" rows="2" .value=${business.footer ?? ''}></textarea></label>
+            <button class="btn go">Save business details</button>
+          </form>
+        </details>
+      </section>
+
       <section class="card no-print">
         <h2>Create invoice</h2>
         <label>Job
@@ -110,7 +148,7 @@ class CtInvoices extends CtElement {
                 </select>
               </label>
               ${this.billingType === 'hourly'
-                ? html`<p class="muted">${unbilled.length} ${jobDraft ? 'sessions in this draft' : 'unbilled job sessions'} · ${hours.toFixed(2)} hours including travel · ${money(rate)}/hour</p>
+                ? html`<p class="muted">${unbilled.length} ${jobDraft ? 'sessions in this draft' : 'unbilled job sessions'} · ${fmtHrsMins(hours)} (rounded up to 10 min per session) including travel · ${money(rate)}/hour</p>
                     ${!rate ? html`<p class="muted">Set an hourly rate on the job before creating an invoice.</p>` : nothing}
                     ${!unbilled.length ? html`<p class="muted">No unbilled sessions for this job.</p>` : nothing}`
                 : html`<p class="muted">Fixed quote: ${money(job.amount)}${!Number(job.amount) ? ' · Add a quote amount to this job first.' : fixedAlreadyInvoiced ? ' · An invoice already exists for this fixed quote.' : ''}</p>`}
@@ -135,18 +173,50 @@ class CtInvoices extends CtElement {
       </section>
 
       ${selected
-        ? html`<section class="invoice-paper">
+        ? this._paper(selected, business)
+        : nothing}
+    `;
+  }
+
+  _paper(selected, currentBusiness) {
+    const biz = selected.business ?? currentBusiness;
+    const cd = selected.clientDetails ?? {};
+    const termsDays = Number(biz.termsDays);
+    const hourly = selected.billingType === 'hourly';
+    const totalMinutes = hourly ? selected.lines.reduce((sum, line) => sum + (line.minutes ?? Math.round(line.quantity * 60)), 0) : 0;
+    return html`<section class="invoice-paper">
             <div class="invoice-heading">
-              <div><p class="muted">INVOICE</p><h2>${selected.number}</h2></div>
-              <div><p><strong>Date</strong><br />${selected.date}</p><p><strong>Status</strong><br />${selected.status}</p></div>
+              <div>
+                <p class="muted">INVOICE</p><h2>${selected.number}</h2>
+                ${biz.name ? html`<p><strong>${biz.name}</strong></p>` : nothing}
+                ${textLines(biz.address).map((l) => html`<p class="invoice-small">${l}</p>`)}
+                ${biz.email ? html`<p class="invoice-small">${biz.email}</p>` : nothing}
+                ${biz.phone ? html`<p class="invoice-small">${biz.phone}</p>` : nothing}
+                ${biz.taxId ? html`<p class="invoice-small">${biz.taxId}</p>` : nothing}
+              </div>
+              <div>
+                <p><strong>Date</strong><br />${selected.date}</p>
+                ${termsDays > 0 ? html`<p><strong>Due</strong><br />${addDays(selected.date, termsDays)}</p>` : nothing}
+                <p><strong>Status</strong><br />${selected.status}</p>
+              </div>
             </div>
-            <div class="invoice-party"><p class="muted">BILL TO</p><strong>${selected.client}</strong><p>${selected.jobName}</p></div>
+            <div class="invoice-party">
+              <p class="muted">BILL TO</p><strong>${selected.client}</strong>
+              ${cd.contact ? html`<p>${cd.contact}</p>` : nothing}
+              ${textLines(cd.address).map((l) => html`<p>${l}</p>`)}
+              ${cd.email ? html`<p>${cd.email}</p>` : nothing}
+              ${cd.ref ? html`<p>Ref: ${cd.ref}</p>` : nothing}
+              <p>${selected.jobName}</p>
+            </div>
             <div class="invoice-table">
-              <div class="invoice-line invoice-labels"><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span></div>
-              ${selected.lines.map((line) => html`<div class="invoice-line"><span>${line.description}</span><span>${line.quantity}</span><span>${money(line.rate)}</span><strong>${money(line.amount)}</strong></div>`)}
+              <div class="invoice-line invoice-labels"><span>Description</span><span>Hrs</span><span>Rate</span><span>Amount</span></div>
+              ${selected.lines.map((line) => html`<div class="invoice-line"><span>${line.description}</span><span>${hourly ? fmtHrsMins(line.minutes ?? Math.round(line.quantity * 60)) : '—'}</span><span>${money(line.rate)}${hourly ? '/h' : ''}</span><strong>${money(line.amount)}</strong></div>`)}
             </div>
+            ${hourly ? html`<p class="muted">Total time: ${fmtHrsMins(totalMinutes)} (each session rounded up to 10 minutes)</p>` : nothing}
             <div class="invoice-total"><span>Total due</span><strong>${money(selected.total)}</strong></div>
             <p class="muted">No tax applied.</p>
+            ${biz.paymentDetails ? html`<div><p class="muted">PAYMENT DETAILS</p>${textLines(biz.paymentDetails).map((l) => html`<p class="invoice-small">${l}</p>`)}</div>` : nothing}
+            ${biz.footer ? html`<p class="invoice-small">${biz.footer}</p>` : nothing}
             <div class="invoice-controls no-print">
               <label>Status
                 <select .value=${selected.status} @change=${(e) => this._setStatus(selected, e)}>
@@ -156,9 +226,7 @@ class CtInvoices extends CtElement {
               <button class="btn go" @click=${() => window.print()}>Print / Save PDF</button>
               ${selected.status === 'draft' ? html`<button class="btn stop" @click=${() => this._deleteDraft(selected)}>Delete draft</button>` : nothing}
             </div>
-          </section>`
-        : nothing}
-    `;
+          </section>`;
   }
 }
 

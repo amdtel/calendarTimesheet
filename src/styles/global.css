@@ -69,6 +69,7 @@ form.card { gap: 12px; }
 .invoice-heading h2 { font-size: 1.5rem; }
 .invoice-heading > div:last-child { text-align: right; }
 .invoice-party p { margin: 4px 0; }
+.invoice-small { margin: 2px 0; font-size: .85rem; }
 .invoice-table { display: grid; gap: 0; }
 .invoice-line { display: grid; grid-template-columns: minmax(0, 2fr) .55fr 1fr 1fr; gap: 8px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .invoice-line > :first-child { overflow-wrap: anywhere; }

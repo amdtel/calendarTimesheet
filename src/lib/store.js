@@ -13,11 +13,12 @@ const normalizeActive = (active) => {
 
 const load = () => {
   try {
-    const data = { jobs: [], entries: [], invoices: [], deletedDraftNumbers: [], active: null, ...JSON.parse(localStorage.getItem(KEY)) };
+    const data = { jobs: [], entries: [], invoices: [], deletedDraftNumbers: [], business: {}, active: null, ...JSON.parse(localStorage.getItem(KEY)) };
+    data.business ??= {};
     data.active = normalizeActive(data.active);
     return data;
   } catch {
-    return { jobs: [], entries: [], invoices: [], deletedDraftNumbers: [], active: null };
+    return { jobs: [], entries: [], invoices: [], deletedDraftNumbers: [], business: {}, active: null };
   }
 };
 
@@ -37,6 +38,11 @@ export const saveJob = (job) => {
   const i = state.jobs.findIndex((j) => j.id === job.id);
   if (i >= 0) state.jobs[i] = job;
   else state.jobs.push({ ...job, id: id() });
+  save();
+};
+
+export const saveBusiness = (business) => {
+  state.business = business;
   save();
 };
 
@@ -178,6 +184,7 @@ export const replaceAll = (data) => {
     entries: data.entries ?? [],
     invoices: data.invoices ?? [],
     deletedDraftNumbers: data.deletedDraftNumbers ?? [],
+    business: data.business ?? {},
     active: normalizeActive(data.active ?? null),
   };
   save();

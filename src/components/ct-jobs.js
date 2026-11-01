@@ -12,7 +12,7 @@ class CtJobs extends CtElement {
 
   _new() {
     const p = new URLSearchParams(location.search);
-    return { name: '', client: '', status: 'estimate', billingType: 'fixed', hourlyRate: '', date: p.get('date') ?? '', amount: '', notes: '' };
+    return { name: '', client: '', clientContact: '', clientEmail: '', clientAddress: '', clientRef: '', status: 'estimate', billingType: 'fixed', hourlyRate: '', date: p.get('date') ?? '', amount: '', notes: '' };
   }
 
   connectedCallback() {
@@ -35,6 +35,10 @@ class CtJobs extends CtElement {
         <h2>${j.id ? 'Edit job' : 'New job'}</h2>
         <label>Job name <input name="name" required .value=${j.name} /></label>
         <label>Client <input name="client" .value=${j.client} /></label>
+        <label>Client contact <input name="clientContact" .value=${j.clientContact ?? ''} /></label>
+        <label>Client email <input type="email" name="clientEmail" .value=${j.clientEmail ?? ''} /></label>
+        <label>Client address <textarea name="clientAddress" rows="3" .value=${j.clientAddress ?? ''}></textarea></label>
+        <label>PO / reference <input name="clientRef" .value=${j.clientRef ?? ''} /></label>
         <label>Status
           <select name="status">
             ${STATUSES.map((s) => html`<option ?selected=${s === j.status}>${s}</option>`)}

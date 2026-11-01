@@ -1,4 +1,4 @@
-const CACHE = 'ct-v3';
+const CACHE = 'ct-v4';
 const SHELL = ['/', '/calendar/', '/jobs/', '/timesheet/', '/invoices/', '/backup/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
