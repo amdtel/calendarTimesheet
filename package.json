@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "astro dev --host",
     "build": "astro build",
-    "preview": "astro preview --host"
+    "preview": "astro preview --host",
+    "test": "node --test"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.7",
@@ -16,6 +17,7 @@
     "astro": "^5.0.0",
     "cbor-x": "^1.6.8",
     "jose": "^6.2.14",
-    "lit": "^3.2.0"
+    "lit": "^3.2.0",
+    "pg": "^8.23.1"
   }
 }

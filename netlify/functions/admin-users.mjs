@@ -16,6 +16,7 @@ export default async (req) => {
 
   let body;
   try { body = await req.json(); } catch { return json({ error: 'invalid body' }, 400); }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ error: 'invalid body' }, 400);
   const stake = String(body.stake || '').trim();
   if (!isWalletAddress(stake)) return json({ error: 'invalid wallet address' }, 400);
 

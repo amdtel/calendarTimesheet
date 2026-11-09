@@ -2,7 +2,7 @@
 
 ## Purpose and current state
 
-This is a mobile-first, installable job calendar and timesheet for one person or a small operator. It supports job scheduling and status tracking, time tracking, local JSON/CSV exports, and basic GBP invoicing. The app is a prototype: its data is stored only in the current browser/device, with no server database or automatic cross-device sync.
+This is a mobile-first, installable job calendar and timesheet for one person or a small operator. It supports job scheduling and status tracking, time tracking, local JSON/CSV exports, and basic GBP invoicing. The app is a prototype: job and timesheet data is stored only in the current browser/device, with no automatic cross-device sync. Admin authentication uses Netlify Blobs and PostgreSQL.
 
 ## Stack and structure
 
@@ -13,7 +13,7 @@ This is a mobile-first, installable job calendar and timesheet for one person or
 - `src/components/` contains the Clock, Jobs, Calendar, Hours, Backup, and Invoices views.
 - `src/pages/` contains the static Astro route shells; `src/layouts/Layout.astro` owns the shared nav, component imports, manifest link and service-worker registration.
 - `src/styles/global.css` owns screen and print styles.
-- `netlify/functions/` and `netlify/lib/auth.mjs` implement the admin API: CIP-30 wallet sign-in (nonce challenge, COSE_Sign1 verification, key-hash check against a mainnet stake or key-based payment address), HMAC-signed JWT cookie sessions, and a role-based user list in Netlify Blobs. `/admin/` (`src/pages/admin.astro`, `src/components/ct-admin.js`, `src/lib/wallet.js`) is the sign-in and user-management UI and is not part of the installable app.
+- `netlify/functions/` and `netlify/lib/auth.mjs` implement the admin API: CIP-30 wallet sign-in (nonce challenge, COSE_Sign1 verification, key-hash check against a mainnet stake or key-based payment address), HMAC-signed JWT cookie sessions, a role-based user list in Netlify Blobs, and PostgreSQL nonce-consumption markers. `/admin/` (`src/pages/admin.astro`, `src/components/ct-admin.js`, `src/lib/wallet.js`) is the sign-in and user-management UI and is not part of the installable app.
 - `public/sw.js` caches the app shell and same-origin GET resources; increment its cache name when needed to replace deployed cached resources.
 - `public/manifest.webmanifest` and the PNGs in `public/` define PWA metadata and icons.
 
@@ -31,11 +31,15 @@ This is a mobile-first, installable job calendar and timesheet for one person or
 
 ## Admin auth invariants
 
-- `verifySignature` checks the payload, signature and address key hash, but can fall back to a client-supplied address. Nonce consumption is not atomic. Address binding and concurrent replay must be fixed and tested before production use.
+- Challenges bind the exact mainnet address into the signed message; verify any protected address header matches it and check the signing key hash. Never accept an unsigned verify-request address as identity. Payment signatures do not prove ownership of the embedded stake credential.
+- A valid signature consumes a nonce through a unique PostgreSQL insert. Never fall back to Netlify Blobs: a local concurrent `onlyIfNew` test admitted two requests. All functions must use the same durable writable database; never delete markers, restore an older database, or switch databases while challenges may still be accepted.
+- Version the session audience when changing authentication guarantees, so previously issued cookies cannot bypass them. Cookies are not individually revoked on logout.
 - Roles (`admin`, `office`, `worker`) come only from the stored user record or `ADMIN_STAKE_ADDRESSES`; every function must call `requireRole`. Do not trust the static `/admin/` page.
-- Required env vars: `SESSION_SECRET` (32+ chars) and `ADMIN_STAKE_ADDRESSES`. Never commit `.env`.
+- Required env vars: `SESSION_SECRET` (32+ chars), `ADMIN_STAKE_ADDRESSES`, and `AUTH_DATABASE_URL` (PostgreSQL with the schema in `netlify/auth-schema.sql`). Never commit `.env`.
+- Local and deployed environments need separate database URLs and session secrets. Provision the hosted database and apply the schema explicitly; a Netlify Database or provider-specific connection variable is not automatically used as `AUTH_DATABASE_URL`. Deploy previews must not share challenges across independently branched nonce databases.
 - Netlify dev turns 403 function responses into a 404 retry, so sign-in failures use 401.
 - Use `npx netlify dev` (port 8888) to test functions; `npm run dev` has no API. The service worker must not cache `/api/` or `/admin`.
+- Run `npm test` for signature, address, expiry and replay tests. The optional `CT_TEST_URL` endpoint suite requires the synthetic local credentials and disposable PostgreSQL described in the README and must never target production. Test the actual database provider and deployment before sensitive data; real Brave and hardware-wallet compatibility remains unverified.
 
 ## Development and deployment
 

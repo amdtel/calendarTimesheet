@@ -24,8 +24,6 @@ async function post(path, body) {
 
 export async function login(walletId) {
   const api = await window.cardano[walletId].enable();
-  const { nonce, message } = await post('/api/auth/challenge');
-  const payload = toHex(message);
 
   // Reward addresses are preferred; Brave lacks them and only signs with its payment address.
   const candidates = [];
@@ -39,11 +37,21 @@ export async function login(walletId) {
 
   let failure;
   for (const address of new Set(candidates)) {
+    let nonce, payload, bech32Address;
+    try {
+      bech32Address = bech32Form(address);
+      const challenge = await post('/api/auth/challenge', { address: bech32Address });
+      nonce = challenge.nonce;
+      payload = toHex(challenge.message);
+    } catch (e) {
+      failure = e;
+      continue;
+    }
     // Some wallets only accept the bech32 form of the address.
-    for (const form of [address, bech32Form(address)]) {
+    for (const form of [address, bech32Address]) {
       try {
         const { signature, key } = await api.signData(form, payload);
-        return post('/api/auth/verify', { nonce, signature, key, address });
+        return post('/api/auth/verify', { nonce, signature, key });
       } catch (e) {
         failure = e;
         if (e?.code === 3) throw e;
