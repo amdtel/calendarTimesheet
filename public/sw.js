@@ -1,4 +1,4 @@
-const CACHE = 'ct-v4';
+const CACHE = 'ct-v5';
 const SHELL = ['/', '/calendar/', '/jobs/', '/timesheet/', '/invoices/', '/backup/', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -16,7 +16,9 @@ self.addEventListener('activate', (e) => {
 // Stale-while-revalidate for same-origin GETs so pages and hashed assets work offline.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== location.origin) return;
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin')) return;
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const hit = await cache.match(req);
