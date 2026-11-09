@@ -9,7 +9,13 @@
     "preview": "astro preview --host"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.7",
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "@scure/base": "^2.4.0",
     "astro": "^5.0.0",
+    "cbor-x": "^1.6.8",
+    "jose": "^6.2.14",
     "lit": "^3.2.0"
   }
 }

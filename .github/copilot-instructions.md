@@ -13,6 +13,7 @@ This is a mobile-first, installable job calendar and timesheet for one person or
 - `src/components/` contains the Clock, Jobs, Calendar, Hours, Backup, and Invoices views.
 - `src/pages/` contains the static Astro route shells; `src/layouts/Layout.astro` owns the shared nav, component imports, manifest link and service-worker registration.
 - `src/styles/global.css` owns screen and print styles.
+- `netlify/functions/` and `netlify/lib/auth.mjs` implement the admin API: CIP-30 wallet sign-in (nonce challenge, COSE_Sign1 verification, key-hash check against a mainnet stake or key-based payment address), HMAC-signed JWT cookie sessions, and a role-based user list in Netlify Blobs. `/admin/` (`src/pages/admin.astro`, `src/components/ct-admin.js`, `src/lib/wallet.js`) is the sign-in and user-management UI and is not part of the installable app.
 - `public/sw.js` caches the app shell and same-origin GET resources; increment its cache name when needed to replace deployed cached resources.
 - `public/manifest.webmanifest` and the PNGs in `public/` define PWA metadata and icons.
 
@@ -27,6 +28,14 @@ This is a mobile-first, installable job calendar and timesheet for one person or
 - Invoice currency is GBP and tax is currently not calculated.
 - Keep old backups loadable when adding fields: supply safe defaults in `load()` and `replaceAll()`.
 - Lit reactive properties must be initialized in constructors, not with class-field initializers that shadow Lit accessors.
+
+## Admin auth invariants
+
+- `verifySignature` checks the payload, signature and address key hash, but can fall back to a client-supplied address. Nonce consumption is not atomic. Address binding and concurrent replay must be fixed and tested before production use.
+- Roles (`admin`, `office`, `worker`) come only from the stored user record or `ADMIN_STAKE_ADDRESSES`; every function must call `requireRole`. Do not trust the static `/admin/` page.
+- Required env vars: `SESSION_SECRET` (32+ chars) and `ADMIN_STAKE_ADDRESSES`. Never commit `.env`.
+- Netlify dev turns 403 function responses into a 404 retry, so sign-in failures use 401.
+- Use `npx netlify dev` (port 8888) to test functions; `npm run dev` has no API. The service worker must not cache `/api/` or `/admin`.
 
 ## Development and deployment
 
